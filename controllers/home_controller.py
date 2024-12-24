@@ -1,5 +1,5 @@
 
-from flask import Blueprint, request, jsonify, send_file
+from flask import Blueprint, request, jsonify, send_file, render_template
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 from models.user_model import User, Library, Book
 import datetime
@@ -77,6 +77,29 @@ def delete_book(book_id):
     Book.delete(book_id)
     return jsonify({"message": "Book deleted successfully"})
 
+@home_bp.route('/generate_pdf', methods=['GET', 'POST'])
+@jwt_required()
+def generate_pdf():
+    if request.method == 'POST':
+        data = request.form
+        name = data.get('name')
+        paragraph = data.get('paragraph')
+        buffer = BytesIO()
+        p = canvas.Canvas(buffer, pagesize=letter)
+        width, height = letter
+
+        p.drawString(100, height - 100, f"Name: {name}")
+        p.drawString(100, height - 150, "Paragraph:")
+        p.drawString(100, height - 200, paragraph)
+
+        p.showPage()
+        p.save()
+
+        buffer.seek(0)
+        return send_file(buffer, as_attachment=True, download_name='output.pdf', mimetype='application/pdf')
+    return render_template('form.html')
+
+"""
 @home_bp.route('/generate_pdf', methods=['POST'])
 @jwt_required()
 def generate_pdf():
@@ -88,13 +111,14 @@ def generate_pdf():
     width,height = letter
     
     p.drawString(100, height - 100, f"name: {name}")
-    p.drawString(100, height - 200, "paragraph:")
-    p.drawString(100, height - 250, paragraph)
+    p.drawString(100, height - 150, "paragraph:")
+    p.drawString(100, height - 200, paragraph)
     
     p.showPage()
     p.save()
     
+    
     buffer.seek(0)
     return send_file(buffer, as_attachment=True, download_name="report.pdf", mimetype="application/pdf")
-    
+    """
     
