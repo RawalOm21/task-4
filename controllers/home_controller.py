@@ -6,6 +6,8 @@ import datetime
 from io import BytesIO
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
+from reportlab.lib.colors import blue
+
 
 home_bp = Blueprint('home', __name__)
 
@@ -14,6 +16,10 @@ def init_jwt(app):
     app.config['JWT_SECRET_KEY'] = 'your_jwt_secret_key'
     jwt = JWTManager(app)
     return jwt
+
+@home_bp.route('/index.html' , methods=['GET'])
+def index():
+    return render_template('index.html')
 
 @home_bp.route('/login', methods=['POST'])
 def login():
@@ -91,34 +97,17 @@ def generate_pdf():
         p.drawString(100, height - 100, f"Name: {name}")
         p.drawString(100, height - 150, "Paragraph:")
         p.drawString(100, height - 200, paragraph)
-
+        
+        p.setFillColor(blue)
+ #       p.linkURL("http://127.0.0.1:5000/index.html", (100, height - 250, 200, height - 300), thickness=1, color=blue,relative=1)
+        p.drawString(100, height - 250, "Click here to visit our website")
+        p.linkURL("https://corp.toei-anim.co.jp/en/index.html", (100, height - 250, 300, height - 240), relative=0)
         p.showPage()
         p.save()
+        
 
         buffer.seek(0)
         return send_file(buffer, as_attachment=True, download_name='output.pdf', mimetype='application/pdf')
     return render_template('form.html')
 
-"""
-@home_bp.route('/generate_pdf', methods=['POST'])
-@jwt_required()
-def generate_pdf():
-    data = request.get_json()
-    name = data.get('name')
-    paragraph = data.get('paragraph')
-    buffer = BytesIO()
-    p = canvas.Canvas(buffer, pagesize=letter)
-    width,height = letter
-    
-    p.drawString(100, height - 100, f"name: {name}")
-    p.drawString(100, height - 150, "paragraph:")
-    p.drawString(100, height - 200, paragraph)
-    
-    p.showPage()
-    p.save()
-    
-    
-    buffer.seek(0)
-    return send_file(buffer, as_attachment=True, download_name="report.pdf", mimetype="application/pdf")
-    """
-    
+
